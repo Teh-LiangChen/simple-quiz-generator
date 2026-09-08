@@ -1,0 +1,22 @@
+Question 1
+Which color is made by mixing blue and yellow?
+A. Green
+B. Orange
+C. Purple
+D. Red
+Answer: A
+Explanation: Mixing blue and yellow creates green.
+
+Question 2
+Which of the following are fruits?
+A. Apple
+B. Carrot
+C. Banana
+D. Potato
+Answer: A, C
+Explanation: Apples and bananas are fruits. Carrots and potatoes are vegetables.
+
+Question 3
+The Earth orbits the Sun.
+Answer: True
+Explanation: The Earth travels around the Sun once approximately every year.

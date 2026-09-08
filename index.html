@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Revision Quiz Generator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="app-header">
+      <div>
+        <h1>Revision Quiz Generator</h1>
+        <p class="subtitle">Load a question bank, test yourself, then reveal the reasoning.</p>
+      </div>
+      <div class="header-mark" aria-hidden="true">RQ</div>
+    </header>
+
+    <section class="file-panel" aria-labelledby="file-heading">
+      <div>
+        <p class="section-label">Question bank</p>
+        <h2 id="file-heading">Choose a text file</h2>
+        <p id="file-status" class="muted">No question bank loaded yet.</p>
+      </div>
+      <label class="file-button" for="file-input">Choose file</label>
+      <input id="file-input" type="file" accept=".txt,text/plain">
+    </section>
+
+    <div id="message" class="message" role="status" aria-live="polite" hidden></div>
+
+    <section id="quiz-panel" class="quiz-panel" aria-live="polite" hidden>
+      <div class="quiz-meta">
+        <span id="progress">Question 1 of 1</span>
+        <span id="score">Score 0</span>
+      </div>
+      <div class="progress-track" aria-hidden="true"><span id="progress-bar"></span></div>
+      <nav id="question-navigation" class="question-navigation" aria-label="Question navigation"></nav>
+
+      <article class="question-card">
+        <p id="question-type" class="question-type"></p>
+        <h2 id="question-text"></h2>
+        <p id="selection-hint" class="selection-hint"></p>
+        <fieldset id="answer-options" class="answer-options">
+          <legend class="sr-only">Answer options</legend>
+        </fieldset>
+        <div id="result" class="result" hidden>
+          <p id="result-heading" class="result-heading"></p>
+          <p><strong>Correct answer:</strong> <span id="correct-answer"></span></p>
+          <div class="explanation">
+            <strong>Explanation</strong>
+            <p id="explanation-text"></p>
+          </div>
+        </div>
+        <div class="quiz-actions">
+          <button id="previous-button" class="secondary-button" type="button">Previous question</button>
+          <button id="confirm-button" class="primary-button" type="button">Confirm answer</button>
+          <button id="next-button" class="secondary-button" type="button" hidden>Next question</button>
+        </div>
+      </article>
+    </section>
+
+    <section id="final-panel" class="final-panel" hidden>
+      <p class="section-label">Quiz complete</p>
+      <h2>Quiz summary</h2>
+      <div class="summary-grid">
+        <div><strong id="summary-total">0</strong><span>Total</span></div>
+        <div class="summary-correct"><strong id="summary-correct">0</strong><span>Correct</span></div>
+        <div class="summary-wrong"><strong id="summary-wrong">0</strong><span>Wrong</span></div>
+        <div class="summary-unanswered"><strong id="summary-unanswered">0</strong><span>Unanswered</span></div>
+      </div>
+      <p id="final-score" class="final-score"></p>
+      <p id="final-message" class="muted"></p>
+      <div class="review-actions">
+        <button id="review-correct-button" class="secondary-button" type="button">Review correct answers</button>
+        <button id="review-wrong-button" class="secondary-button" type="button">Review wrong answers</button>
+        <button id="review-unanswered-button" class="secondary-button" type="button">Review unanswered</button>
+      </div>
+      <button id="restart-button" class="primary-button" type="button">Restart quiz</button>
+    </section>
+
+    <footer>Runs locally in your browser. Your question file is not uploaded.</footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
