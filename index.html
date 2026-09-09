@@ -74,9 +74,39 @@
         <button id="review-correct-button" class="secondary-button" type="button">Review correct answers</button>
         <button id="review-wrong-button" class="secondary-button" type="button">Review wrong answers</button>
         <button id="review-unanswered-button" class="secondary-button" type="button">Review unanswered</button>
+        <button id="export-button" class="secondary-button" type="button">📥 Export wrong answers</button>
       </div>
       <button id="restart-button" class="primary-button" type="button">Restart quiz</button>
     </section>
+
+    <section class="history-panel" aria-labelledby="history-heading">
+      <div>
+        <p class="section-label">Quiz History</p>
+        <h2 id="history-heading">Load your quiz history</h2>
+        <p id="history-status" class="muted">No history loaded yet.</p>
+      </div>
+      <label class="file-button" for="history-input">Upload quiz_history.csv</label>
+      <input id="history-input" type="file" accept=".csv,text/csv">
+    </section>
+
+    <div id="history-display" class="history-display" hidden>
+      <h3>Quiz Performance History</h3>
+      <table id="history-table" class="history-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Quiz Name</th>
+            <th>Correct</th>
+            <th>Wrong</th>
+            <th>Total</th>
+            <th>Score %</th>
+            <th>Wrong Questions</th>
+          </tr>
+        </thead>
+        <tbody id="history-tbody"></tbody>
+      </table>
+      <button id="export-history-button" class="secondary-button" type="button">📥 Download history.csv</button>
+    </div>
 
     <footer>Runs locally in your browser. Your question file is not uploaded.</footer>
   </main>

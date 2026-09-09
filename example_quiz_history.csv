@@ -1,0 +1,5 @@
+Timestamp,QuizName,CorrectCount,WrongCount,TotalCount,WronglyAnsweredQuestions
+2026-09-08T10:15:30Z,quiz1.txt.txt,15,5,20,"1,3,7,12,15"
+2026-09-08T11:45:20Z,quiz2.txt,18,2,20,"5,9"
+2026-09-09T14:30:45Z,quiz1.txt,16,4,20,"2,6,14,18"
+2026-09-09T15:22:10Z,quiz3.txt,17,3,20,"4,8,16"

@@ -2,7 +2,9 @@ const state = {
   questions: [],
   currentIndex: 0,
   reviewFilter: null,
-  sourceText: ''
+  sourceText: '',
+  wrongAnswers: [],
+  quizHistory: []
 };
 
 const elements = {
@@ -46,6 +48,27 @@ elements.restartButton.addEventListener('click', restartQuiz);
 elements.reviewCorrectButton.addEventListener('click', () => startReview('correct'));
 elements.reviewWrongButton.addEventListener('click', () => startReview('wrong'));
 elements.reviewUnansweredButton.addEventListener('click', () => startReview('unanswered'));
+
+// Initialize quiz history on app startup
+initializeQuizHistory();
+loadQuizHistoryFromLocalStorage();
+
+// Wire up history file upload
+const historyInput = document.querySelector('#history-input');
+if (historyInput) {
+  historyInput.addEventListener('change', loadHistoryFile);
+}
+
+// Wire up export buttons
+const exportButton = document.querySelector('#export-button');
+if (exportButton) {
+  exportButton.addEventListener('click', exportQuizHistoryAsTextFile);
+}
+
+const exportHistoryButton = document.querySelector('#export-history-button');
+if (exportHistoryButton) {
+  exportHistoryButton.addEventListener('click', exportQuizHistoryAsCSV);
+}
 
 async function loadFile(event) {
   const file = event.target.files[0];
@@ -208,6 +231,12 @@ function submitAnswer() {
   question.selected = selected;
   question.submitted = true;
   question.correct = correct;
+  
+  // Record wrong answer for Proposal 3
+  if (!correct) {
+    recordWrongAnswer(question);
+  }
+  
   elements.score.textContent = `Score ${getCounts().correct}`;
   elements.result.classList.toggle('incorrect', !correct);
   elements.resultHeading.textContent = correct ? 'Correct answer' : 'Not quite';
@@ -307,6 +336,10 @@ function finishQuiz() {
   saveCurrentSelection();
   const counts = getCounts();
   if (counts.unanswered > 0 && !window.confirm(`You have ${counts.unanswered} unanswered questions. Finish the quiz anyway?`)) return;
+  
+  // Record quiz performance for Proposal 4
+  completeQuiz();
+  
   state.reviewFilter = null;
   elements.quizPanel.hidden = true;
   elements.finalPanel.hidden = false;
@@ -316,6 +349,9 @@ function finishQuiz() {
   elements.summaryUnanswered.textContent = counts.unanswered;
   elements.finalScore.textContent = `Score: ${counts.correct} / ${state.questions.length} (${Math.round((counts.correct / state.questions.length) * 100)}%)`;
   elements.finalMessage.textContent = counts.correct === state.questions.length ? 'Perfect score. Excellent work.' : 'Review a result category to strengthen your weaker topics.';
+  
+  // Update history display
+  displayQuizHistory();
 }
 
 function startReview(filter) {
@@ -342,6 +378,278 @@ function showMessage(text, type) {
 
 function titleCase(value) {
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+}
+
+// ===== PROPOSAL 3: Wrong Answers Export Feature =====
+
+function initializeQuizHistory() {
+  const saved = localStorage.getItem('quiz_wrong_answers');
+  if (saved) {
+    try {
+      state.wrongAnswers = JSON.parse(saved);
+    } catch (error) {
+      console.error('Failed to load quiz history:', error);
+      state.wrongAnswers = [];
+    }
+  }
+}
+
+function getQuizName() {
+  const fileInput = document.querySelector('#file-input');
+  if (fileInput && fileInput.files.length > 0) {
+    return fileInput.files[0].name;
+  }
+  return 'quiz.txt';
+}
+
+function recordWrongAnswer(question) {
+  const record = {
+    quiz_name: getQuizName(),
+    question_number: question.number,
+    question: question.prompt,
+    options: question.options.map(opt => opt.text) || [],
+    correct_answer: question.answers[0],
+    explanation: question.explanation || ''
+  };
+
+  state.wrongAnswers.push(record);
+  saveQuizHistoryToLocalStorage();
+  console.log('Wrong answer recorded:', record);
+}
+
+function saveQuizHistoryToLocalStorage() {
+  localStorage.setItem('quiz_wrong_answers', JSON.stringify(state.wrongAnswers));
+}
+
+function exportQuizHistoryAsTextFile() {
+  if (state.wrongAnswers.length === 0) {
+    alert('No wrong answers to export yet.');
+    return;
+  }
+
+  const originalQuizName = state.wrongAnswers[0].quiz_name;
+  const baseFileName = originalQuizName.replace('.txt', '');
+  const exportFileName = `wrong${baseFileName}.txt`;
+
+  let fileContent = '';
+  
+  state.wrongAnswers.forEach((record, index) => {
+    fileContent += `Question ${record.question_number}\n`;
+    fileContent += `${record.question}\n`;
+    
+    if (record.options && record.options.length > 0) {
+      record.options.forEach((option, idx) => {
+        const optionLabel = String.fromCharCode(97 + idx);
+        fileContent += `${optionLabel}) ${option}\n`;
+      });
+    }
+    
+    fileContent += `Correct Answer: ${record.correct_answer}\n`;
+    
+    if (record.explanation) {
+      fileContent += `Explanation: ${record.explanation}\n`;
+    }
+    
+    if (index < state.wrongAnswers.length - 1) {
+      fileContent += '\n';
+    }
+  });
+
+  downloadFile(fileContent, exportFileName, 'text/plain');
+}
+
+function downloadFile(content, filename, mimeType = 'text/plain') {
+  const blob = new Blob([content], { type: mimeType + ';charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+// ===== PROPOSAL 4: Quiz Performance History Feature =====
+
+function loadHistoryFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const csvContent = e.target.result;
+      const records = parseQuizHistoryCSV(csvContent);
+      state.quizHistory = records;
+      saveQuizHistoryToLocalStorageHistory();
+      displayQuizHistory();
+      updateHistoryStatus(`Loaded ${records.length} quiz records`, 'success');
+    } catch (error) {
+      console.error('Error loading history file:', error);
+      updateHistoryStatus('Error loading file: ' + error.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function parseQuizHistoryCSV(csvContent) {
+  const lines = csvContent.trim().split('\n');
+  if (lines.length < 2) return [];
+
+  const records = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCSVLine(lines[i]);
+    if (values.length < 6) continue;
+
+    const record = {
+      timestamp: values[0],
+      quiz_name: values[1],
+      correct_count: parseInt(values[2]),
+      wrong_count: parseInt(values[3]),
+      total_count: parseInt(values[4]),
+      wrongly_answered_questions: values[5].split(',').map(q => parseInt(q.trim())).filter(q => !isNaN(q))
+    };
+    records.push(record);
+  }
+
+  return records;
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let insideQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      insideQuotes = !insideQuotes;
+    } else if (char === ',' && !insideQuotes) {
+      result.push(current.trim().replace(/^"|"$/g, ''));
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  result.push(current.trim().replace(/^"|"$/g, ''));
+  return result;
+}
+
+function loadQuizHistoryFromLocalStorage() {
+  const saved = localStorage.getItem('quiz_history');
+  if (saved) {
+    try {
+      state.quizHistory = JSON.parse(saved);
+      if (state.quizHistory.length > 0) {
+        displayQuizHistory();
+        updateHistoryStatus(`${state.quizHistory.length} quiz records loaded from device`);
+      }
+    } catch (error) {
+      console.error('Failed to load quiz history:', error);
+      state.quizHistory = [];
+    }
+  }
+}
+
+function saveQuizHistoryToLocalStorageHistory() {
+  localStorage.setItem('quiz_history', JSON.stringify(state.quizHistory));
+}
+
+function completeQuiz() {
+  const counts = getCounts();
+  const wronglyAnswered = state.questions
+    .map((q, idx) => q.submitted && !q.correct ? q.number : null)
+    .filter(n => n !== null);
+
+  const historyRecord = {
+    timestamp: new Date().toISOString(),
+    quiz_name: getQuizName(),
+    correct_count: counts.correct,
+    wrong_count: counts.wrong,
+    total_count: state.questions.length,
+    wrongly_answered_questions: wronglyAnswered
+  };
+
+  state.quizHistory.push(historyRecord);
+  saveQuizHistoryToLocalStorageHistory();
+  console.log('Quiz performance recorded:', historyRecord);
+}
+
+function displayQuizHistory() {
+  if (state.quizHistory.length === 0) {
+    const historyDisplay = document.querySelector('#history-display');
+    if (historyDisplay) {
+      historyDisplay.hidden = true;
+    }
+    return;
+  }
+
+  const tbody = document.querySelector('#history-tbody');
+  if (!tbody) return;
+  
+  tbody.innerHTML = '';
+
+  state.quizHistory.forEach(record => {
+    const scorePercent = ((record.correct_count / record.total_count) * 100).toFixed(1);
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${formatDate(record.timestamp)}</td>
+      <td>${record.quiz_name}</td>
+      <td>${record.correct_count}</td>
+      <td>${record.wrong_count}</td>
+      <td>${record.total_count}</td>
+      <td>${scorePercent}%</td>
+      <td>${record.wrongly_answered_questions.join(', ')}</td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  const historyDisplay = document.querySelector('#history-display');
+  if (historyDisplay) {
+    historyDisplay.hidden = false;
+  }
+}
+
+function formatDate(iso8601String) {
+  const date = new Date(iso8601String);
+  return date.toLocaleString();
+}
+
+function updateHistoryStatus(message, type = 'success') {
+  const statusElement = document.querySelector('#history-status');
+  if (statusElement) {
+    statusElement.textContent = message;
+    statusElement.className = `muted ${type === 'error' ? 'error' : ''}`;
+  }
+}
+
+function exportQuizHistoryAsCSV() {
+  if (state.quizHistory.length === 0) {
+    alert('No quiz history to export.');
+    return;
+  }
+
+  const headers = ['Timestamp', 'QuizName', 'CorrectCount', 'WrongCount', 'TotalCount', 'WronglyAnsweredQuestions'];
+
+  const rows = state.quizHistory.map(record => [
+    record.timestamp,
+    record.quiz_name,
+    record.correct_count,
+    record.wrong_count,
+    record.total_count,
+    `"${record.wrongly_answered_questions.join(',')}"` 
+  ]);
+
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.join(','))
+  ].join('\n');
+
+  downloadFile(csvContent, 'quiz_history.csv', 'text/csv');
 }
 
 if (typeof module !== 'undefined') module.exports = { parseQuestionBank, parseQuestionBlock };
