@@ -16,6 +16,8 @@ There is no backend, database, framework, or build step. The selected question f
 - Support single-answer multiple-choice questions.
 - Support multiple-answer multiple-choice questions.
 - Support true/false questions.
+- Independently enable or disable random answer-choice and question ordering.
+- Keep shuffled questions grouped by type: single-answer, multiple-answer, and true/false.
 - Reveal the correct answer and explanation after submission.
 - Navigate directly to any question.
 - Move to the previous or next question.
@@ -67,7 +69,7 @@ Stop the server with `Ctrl+C` when finished.
 10. If questions are unanswered, confirm that you want to finish.
 11. Use the summary actions to review correct, wrong, or unanswered questions.
 
-Answered questions cannot be changed during the current quiz session. Selecting **Restart quiz** clears all answers and starts again from Question 1.
+Use **Shuffle choices** and **Shuffle questions** to turn either randomization on or off. Both are on by default. Settings apply when a question bank is loaded or the quiz is restarted. Shuffled questions remain grouped by their question type, and answer choices are relabeled to match their displayed order. Answered questions cannot be changed during the current quiz session. Selecting **Restart quiz** clears all answers and starts again.
 
 ## Question File Format
 

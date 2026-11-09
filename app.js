@@ -1,10 +1,13 @@
 const state = {
+  questionBank: [],
   questions: [],
   currentIndex: 0,
   reviewFilter: null,
   sourceText: '',
   wrongAnswers: [],
-  quizHistory: []
+  quizHistory: [],
+  shuffleChoices: true,
+  shuffleQuestions: true
 };
 
 const elements = {
@@ -37,7 +40,9 @@ const elements = {
   summaryUnanswered: document.querySelector('#summary-unanswered'),
   reviewCorrectButton: document.querySelector('#review-correct-button'),
   reviewWrongButton: document.querySelector('#review-wrong-button'),
-  reviewUnansweredButton: document.querySelector('#review-unanswered-button')
+  reviewUnansweredButton: document.querySelector('#review-unanswered-button'),
+  shuffleChoicesButton: document.querySelector('#shuffle-choices-button'),
+  shuffleQuestionsButton: document.querySelector('#shuffle-questions-button')
 };
 
 elements.fileInput.addEventListener('change', loadFile);
@@ -48,6 +53,15 @@ elements.restartButton.addEventListener('click', restartQuiz);
 elements.reviewCorrectButton.addEventListener('click', () => startReview('correct'));
 elements.reviewWrongButton.addEventListener('click', () => startReview('wrong'));
 elements.reviewUnansweredButton.addEventListener('click', () => startReview('unanswered'));
+elements.shuffleChoicesButton.addEventListener('click', () => {
+  state.shuffleChoices = !state.shuffleChoices;
+  updateRandomizationButtons();
+});
+elements.shuffleQuestionsButton.addEventListener('click', () => {
+  state.shuffleQuestions = !state.shuffleQuestions;
+  updateRandomizationButtons();
+});
+updateRandomizationButtons();
 
 // Initialize quiz history on app startup
 initializeQuizHistory();
@@ -77,7 +91,9 @@ async function loadFile(event) {
   try {
     const text = await file.text();
     const questions = parseQuestionBank(text);
-    state.questions = questions;
+    state.questionBank = questions;
+    state.questions = arrangeQuestions(questions);
+    state.questions.forEach(setQuestionDisplayOptions);
     state.currentIndex = 0;
     state.reviewFilter = null;
     state.sourceText = text;
@@ -87,6 +103,7 @@ async function loadFile(event) {
     elements.quizPanel.hidden = false;
     renderQuestion();
   } catch (error) {
+    state.questionBank = [];
     state.questions = [];
     elements.quizPanel.hidden = true;
     elements.finalPanel.hidden = true;
@@ -183,8 +200,8 @@ function renderQuestion() {
   elements.selectionHint.textContent = question.type === 'multiple' ? 'Select every answer that applies.' : 'Select one answer.';
   elements.answerOptions.innerHTML = '';
 
-  const options = question.type === 'true-false' ? [{ key: 'true', text: 'True' }, { key: 'false', text: 'False' }] : question.options;
-  options.forEach(option => {
+  const options = question.displayOptions || question.options;
+  options.forEach((option, index) => {
     const label = document.createElement('label');
     label.className = 'option';
     const input = document.createElement('input');
@@ -193,7 +210,7 @@ function renderQuestion() {
     input.value = option.key;
     const key = document.createElement('span');
     key.className = 'option-letter';
-    key.textContent = question.type === 'true-false' ? '' : `${option.key}.`;
+    key.textContent = question.type === 'true-false' ? '' : `${String.fromCharCode(65 + index)}.`;
     const text = document.createElement('span');
     text.textContent = option.text;
     label.append(input, key, text);
@@ -207,7 +224,7 @@ function renderQuestion() {
   });
   elements.result.classList.toggle('incorrect', submitted && !question.correct);
   elements.resultHeading.textContent = question.correct ? 'Correct answer' : 'Not quite';
-  elements.correctAnswer.textContent = question.type === 'true-false' ? titleCase(question.answers[0]) : question.answers.join(', ');
+  elements.correctAnswer.textContent = getDisplayedCorrectAnswer(question);
   elements.explanationText.textContent = question.explanation;
   elements.result.hidden = !submitted;
   elements.confirmButton.hidden = submitted;
@@ -240,7 +257,7 @@ function submitAnswer() {
   elements.score.textContent = `Score ${getCounts().correct}`;
   elements.result.classList.toggle('incorrect', !correct);
   elements.resultHeading.textContent = correct ? 'Correct answer' : 'Not quite';
-  elements.correctAnswer.textContent = question.type === 'true-false' ? titleCase(question.answers[0]) : question.answers.join(', ');
+  elements.correctAnswer.textContent = getDisplayedCorrectAnswer(question);
   elements.explanationText.textContent = question.explanation;
   elements.result.hidden = false;
   elements.confirmButton.hidden = true;
@@ -258,14 +275,58 @@ function showNextQuestion() {
 function restartQuiz() {
   state.currentIndex = 0;
   state.reviewFilter = null;
-  state.questions.forEach(question => {
+  state.questionBank.forEach(question => {
     delete question.selected;
     delete question.submitted;
     delete question.correct;
   });
+  state.questions = arrangeQuestions(state.questionBank);
+  state.questions.forEach(setQuestionDisplayOptions);
   elements.finalPanel.hidden = true;
   elements.quizPanel.hidden = false;
   renderQuestion();
+}
+
+function setQuestionDisplayOptions(question) {
+  const options = question.type === 'true-false'
+    ? [{ key: 'true', text: 'True' }, { key: 'false', text: 'False' }]
+    : question.options;
+  question.displayOptions = state.shuffleChoices ? shuffleArray(options) : [...options];
+}
+
+function arrangeQuestions(questions) {
+  if (!state.shuffleQuestions) return [...questions];
+
+  const sections = new Map();
+  questions.forEach(question => {
+    if (!sections.has(question.type)) sections.set(question.type, []);
+    sections.get(question.type).push(question);
+  });
+  return [...sections.values()].flatMap(shuffleArray);
+}
+
+function shuffleArray(items) {
+  const shuffled = [...items];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
+function updateRandomizationButtons() {
+  elements.shuffleChoicesButton.textContent = `Shuffle choices: ${state.shuffleChoices ? 'On' : 'Off'}`;
+  elements.shuffleChoicesButton.setAttribute('aria-pressed', String(state.shuffleChoices));
+  elements.shuffleQuestionsButton.textContent = `Shuffle questions: ${state.shuffleQuestions ? 'On' : 'Off'}`;
+  elements.shuffleQuestionsButton.setAttribute('aria-pressed', String(state.shuffleQuestions));
+}
+
+function getDisplayedCorrectAnswer(question) {
+  if (question.type === 'true-false') return titleCase(question.answers[0]);
+  return question.answers.map(answer => {
+    const index = question.displayOptions.findIndex(option => option.key === answer);
+    return String.fromCharCode(65 + index);
+  }).join(', ');
 }
 
 function moveQuestion(direction) {
@@ -407,8 +468,8 @@ function recordWrongAnswer(question) {
     quiz_name: getQuizName(),
     question_number: question.number,
     question: question.prompt,
-    options: question.options.map(opt => opt.text) || [],
-    correct_answer: question.answers[0],
+    options: question.displayOptions.map(opt => opt.text),
+    correct_answer: getDisplayedCorrectAnswer(question),
     explanation: question.explanation || ''
   };
 

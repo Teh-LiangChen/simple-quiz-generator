@@ -21,6 +21,11 @@
         <p class="section-label">Question bank</p>
         <h2 id="file-heading">Choose a text file</h2>
         <p id="file-status" class="muted">No question bank loaded yet.</p>
+        <div class="quiz-settings" aria-label="Quiz randomization settings">
+          <button id="shuffle-choices-button" class="secondary-button setting-toggle" type="button" aria-pressed="true">Shuffle choices: On</button>
+          <button id="shuffle-questions-button" class="secondary-button setting-toggle" type="button" aria-pressed="true">Shuffle questions: On</button>
+        </div>
+        <p class="settings-hint muted">Settings apply when a question bank is loaded or the quiz is restarted. Shuffled questions stay grouped by type.</p>
       </div>
       <label class="file-button" for="file-input">Choose file</label>
       <input id="file-input" type="file" accept=".txt,text/plain">
