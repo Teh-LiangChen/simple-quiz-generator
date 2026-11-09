@@ -16,7 +16,7 @@ There is no backend, database, framework, or build step. The selected question f
 - Support single-answer multiple-choice questions.
 - Support multiple-answer multiple-choice questions.
 - Support true/false questions.
-- Independently enable or disable random answer-choice and question ordering.
+- Independently enable or disable random answer-choice and question ordering. True/False choices always remain in True-then-False order.
 - Keep shuffled questions grouped by type: single-answer, multiple-answer, and true/false.
 - Reveal the correct answer and explanation after submission.
 - Navigate directly to any question.

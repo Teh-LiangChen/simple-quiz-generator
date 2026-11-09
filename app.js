@@ -294,7 +294,9 @@ function setQuestionDisplayOptions(question) {
   const options = question.type === 'true-false'
     ? [{ key: 'true', text: 'True' }, { key: 'false', text: 'False' }]
     : question.options;
-  question.displayOptions = state.shuffleChoices ? shuffleArray(options) : [...options];
+  question.displayOptions = state.shuffleChoices && question.type !== 'true-false'
+    ? shuffleArray(options)
+    : [...options];
 }
 
 function arrangeQuestions(questions) {
