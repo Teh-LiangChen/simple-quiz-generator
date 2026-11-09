@@ -48,6 +48,11 @@
         <fieldset id="answer-options" class="answer-options">
           <legend class="sr-only">Answer options</legend>
         </fieldset>
+        <div class="quiz-actions">
+          <button id="previous-button" class="secondary-button" type="button">Previous question</button>
+          <button id="confirm-button" class="primary-button" type="button">Confirm answer</button>
+          <button id="next-button" class="secondary-button" type="button" hidden>Next question</button>
+        </div>
         <div id="result" class="result" hidden>
           <p id="result-heading" class="result-heading"></p>
           <p><strong>Correct answer:</strong> <span id="correct-answer"></span></p>
@@ -55,11 +60,6 @@
             <strong>Explanation</strong>
             <p id="explanation-text"></p>
           </div>
-        </div>
-        <div class="quiz-actions">
-          <button id="previous-button" class="secondary-button" type="button">Previous question</button>
-          <button id="confirm-button" class="primary-button" type="button">Confirm answer</button>
-          <button id="next-button" class="secondary-button" type="button" hidden>Next question</button>
         </div>
       </article>
     </section>
@@ -115,6 +115,6 @@
 
     <footer>Runs locally in your browser. Your question file is not uploaded.</footer>
   </main>
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

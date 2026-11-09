@@ -227,8 +227,10 @@ function renderQuestion() {
   elements.correctAnswer.textContent = getDisplayedCorrectAnswer(question);
   elements.explanationText.textContent = question.explanation;
   elements.result.hidden = !submitted;
-  elements.confirmButton.hidden = submitted;
-  elements.confirmButton.disabled = false;
+  elements.confirmButton.hidden = false;
+  elements.confirmButton.disabled = submitted;
+  elements.confirmButton.textContent = 'Confirm answer';
+  elements.confirmButton.setAttribute('aria-label', submitted ? 'Answer confirmed' : 'Confirm answer');
   elements.nextButton.hidden = false;
   elements.nextButton.textContent = isLastVisibleQuestion() ? 'View summary' : 'Next question';
   elements.previousButton.hidden = !hasPreviousVisibleQuestion();
@@ -260,7 +262,8 @@ function submitAnswer() {
   elements.correctAnswer.textContent = getDisplayedCorrectAnswer(question);
   elements.explanationText.textContent = question.explanation;
   elements.result.hidden = false;
-  elements.confirmButton.hidden = true;
+  elements.confirmButton.disabled = true;
+  elements.confirmButton.setAttribute('aria-label', 'Answer confirmed');
   elements.nextButton.hidden = false;
   elements.nextButton.textContent = isLastVisibleQuestion() ? 'View summary' : 'Next question';
   elements.answerOptions.querySelectorAll('input').forEach(input => { input.disabled = true; });
